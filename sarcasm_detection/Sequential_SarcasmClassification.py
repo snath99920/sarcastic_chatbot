@@ -19,6 +19,7 @@ import pandas as pd
 import numpy as np
 from keras.layers import LSTM
 from keras.models import model_from_json
+from keras.callbacks import ModelCheckpoint
 
 pickleFile = open('pickleData','rb')
 padded_docs = pickle.load(pickleFile)
@@ -38,10 +39,18 @@ model.add(Dense(1, activation='sigmoid'))
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['acc'])
 # summarize the model
 print(model.summary())
+
+# checkpoint
+filepath="weights.best.hdf5"
+checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+callbacks_list = [checkpoint]
+
+
 # fit the model
-model.fit(padded_docs, labels,  batch_size=32 ,epochs=50, verbose=0)
+model.fit(padded_docs, labels, validation_split=0.33, batch_size=32 ,epochs=10, callbacks=callbacks_list, verbose=0)
 # evaluate the model
 loss, accuracy = model.evaluate(padded_docs, labels, verbose=0)
+
 
 
 # serialize model to JSON
