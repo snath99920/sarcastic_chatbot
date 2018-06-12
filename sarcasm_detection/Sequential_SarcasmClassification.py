@@ -11,13 +11,10 @@ from numpy import asarray
 from numpy import zeros
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
+from keras.layers import Embedding, Dense, Flatten, LSTM, Conv1D, MaxPooling1D, Dropout, Activation
 from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import Flatten
-from keras.layers import Embedding
 import pandas as pd
 import numpy as np
-from keras.layers import LSTM
 from keras.models import model_from_json
 from keras.callbacks import ModelCheckpoint
 
@@ -29,16 +26,15 @@ max_length = pickle.load(pickleFile)
 vocab_size = pickle.load(pickleFile)
 
 
-# define model
+## create model
 model = Sequential()
-e = Embedding(vocab_size, 100, weights=[embedding_matrix], input_length=max_length, trainable=False)
-model.add(e)
+model.add(Embedding(vocab_size, 100, input_length=max_length, weights=[embedding_matrix], trainable=False))
+model.add(Dropout(0.2))
+model.add(Conv1D(64, 5, activation='relu'))
+model.add(MaxPooling1D(pool_size=4))
 model.add(LSTM(100))
 model.add(Dense(1, activation='sigmoid'))
-# compile the model
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['acc'])
-# summarize the model
-print(model.summary())
+model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
 # checkpoint
 filepath="weights.best.hdf5"
@@ -47,11 +43,9 @@ callbacks_list = [checkpoint]
 
 
 # fit the model
-model.fit(padded_docs, labels, validation_split=0.33, batch_size=32 ,epochs=10, callbacks=callbacks_list, verbose=0)
+model.fit(padded_docs, labels, validation_split=0.33, batch_size=32 ,epochs=50, callbacks=callbacks_list, verbose=0)
 # evaluate the model
 loss, accuracy = model.evaluate(padded_docs, labels, verbose=0)
-
-
 
 # serialize model to JSON
 model_json = model.to_json()

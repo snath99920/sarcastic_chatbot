@@ -63,16 +63,6 @@ for word, i in t.word_index.items():
 	if embedding_vector is not None:
 		embedding_matrix[i] = embedding_vector
         
-        
-# define model
-model = Sequential()
-e = Embedding(vocab_size, 100, weights=[embedding_matrix], input_length=max_length, trainable=False)
-model.add(e)
-model.add(LSTM(100))
-model.add(Dense(2, activation='sigmoid'))
-# compile the model
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['acc'])
-
 
 pickleFile = open('pickleData','wb')
 
@@ -83,9 +73,3 @@ pickle.dump(max_length,pickleFile)
 pickle.dump(vocab_size,pickleFile)
 
 pickleFile.close()
-
-
-
-
-
-
