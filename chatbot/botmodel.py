@@ -5,13 +5,13 @@ Created on Wed Jun  6 16:53:52 2018
 @author: VISHAL-PC
 """
 
-#import numpy as np
+import numpy as np
 from keras.models import Model
 from keras.layers import Input, LSTM, Dense, Embedding, Bidirectional, Concatenate
-#from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.text import Tokenizer
 from keras.callbacks import ModelCheckpoint
 
-import pickle
+'''import pickle
 
 pickleFile = open('pickledData', 'rb') 
     
@@ -34,6 +34,7 @@ ans_input = pickle.load(pickleFile)
 pickleFile.close()
 
 '''
+
 ques_input = []
 ans_input = []
 
@@ -58,9 +59,9 @@ for i in range(len(ans_lines)):
             ques_input.append(ques_lines[i])
             ans_input.append('<sos> '+ans_lines[i]+' <eos>')
         
-#ques_input = ques_input[0:50]        
-#ans_input = ans_input[0:50]
-#print(ans_input)
+ques_input = ques_input[0:50]        
+ans_input = ans_input[0:50]
+
 
 
 t = Tokenizer(filters='')
@@ -69,6 +70,33 @@ encoded_docs = t.texts_to_sequences(ans_input)
 #print(encoded_docs)
 word_indexes = t.word_index
 #print(t.word_index)
+
+#Decreasing decoder vocabulary
+
+total_vocab = 20
+
+reverse_word_index = dict(
+    (i, word) for word, i in word_indexes.items())
+    
+word_count = t.word_counts
+sorted_d = sorted(word_count.items(), key=lambda x: x[1])
+vocab_dict = {}
+j=1
+for i in range(len(sorted_d)-total_vocab,len(sorted_d)):
+    #print(i)
+    vocab_dict[sorted_d[i][0]]=j
+    j = j+1
+en_docs = []
+for i in range(len(encoded_docs)):
+    sent = []
+    for j in range(len(encoded_docs[i])):
+        if(vocab_dict.get(reverse_word_index[encoded_docs[i][j]])):
+            sent.append(vocab_dict[reverse_word_index[encoded_docs[i][j]]])
+    en_docs.append(sent)
+encoded_docs = en_docs
+word_indexes = vocab_dict  
+
+
 
 t2 = Tokenizer(filters='')
 t2.fit_on_texts(ques_input)
@@ -79,7 +107,7 @@ word_indexes2 = t2.word_index
 
 
 embeddings_index = dict()
-reverse_embeddings_index = dict()
+#reverse_embeddings_index = dict()
 f = open('glove.6B.200d.txt', encoding="utf8")
 for line in f:
     values = line.split()
@@ -128,7 +156,6 @@ for i in range(0,len(encoded_docs)):
             decoder_input_data[i,l,encoded_docs[i][l]-1] = 1.
             if(l > 0):
                 decoder_target_data[i,l-1,encoded_docs[i][l]-1] = 1.
-'''
 
 latent_dim = 256
 
@@ -171,7 +198,7 @@ callbacks_list = [checkpoint]
 # Run training
 
 history = model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
-          batch_size=1500,
+          batch_size=15,
           validation_split=0.15,
-          epochs=100, 
+          epochs=10, 
           callbacks=callbacks_list)
