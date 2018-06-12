@@ -35,7 +35,7 @@ for i in range(len(ans_lines)):
         
 #ques_input = ques_input[0:50]        
 #ans_input = ans_input[0:50]
-#print(ans_input)
+
 
 
 t = Tokenizer(filters='')
@@ -44,6 +44,33 @@ encoded_docs = t.texts_to_sequences(ans_input)
 #print(encoded_docs)
 word_indexes = t.word_index
 #print(t.word_index)
+
+#Decreasing decoder vocabulary
+
+total_vocab = 20000
+
+reverse_word_index = dict(
+    (i, word) for word, i in word_indexes.items())
+    
+word_count = t.word_counts
+sorted_d = sorted(word_count.items(), key=lambda x: x[1])
+vocab_dict = {}
+j=1
+for i in range(len(sorted_d)-total_vocab,len(sorted_d)):
+    #print(i)
+    vocab_dict[sorted_d[i][0]]=j
+    j = j+1
+en_docs = []
+for i in range(len(encoded_docs)):
+    sent = []
+    for j in range(len(encoded_docs[i])):
+        if(vocab_dict.get(reverse_word_index[encoded_docs[i][j]])):
+            sent.append(vocab_dict[reverse_word_index[encoded_docs[i][j]]])
+    en_docs.append(sent)
+encoded_docs = en_docs
+word_indexes = vocab_dict  
+
+
 
 t2 = Tokenizer(filters='')
 t2.fit_on_texts(ques_input)
