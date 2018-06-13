@@ -13,10 +13,10 @@ import pandas as pd
 
 
 data = pd.read_csv('cleaned_data.csv', sep='\t',header=None)
-X = data.iloc[:700,1:2].values
+X = data.iloc[:2000,1:2].values
 Xdata = []
 
-labels = data.iloc[:700,0:1].values
+labels = data.iloc[:2000,0:1].values
 
 for i in range(len(X)):
     Xdata.append(str(X[i]))
@@ -37,25 +37,6 @@ loaded_model.load_weights("model.h5")
 print("Loaded model from disk")
 
 
-data = pd.read_csv('cleaned_data.csv', sep='\t',header=None)
-X = data.iloc[1000:1300,1].values
-Xtest = []
-
-labels = data.iloc[1000:1300,0].values
-for i in range(len(X)):
-    Xtest.append(str(X[i]))
-
-
-encoded_test = t.texts_to_sequences(Xtest)
-
-#####change max length according to input
-padded_test = pad_sequences(encoded_test, maxlen=100, padding='post')
-print(padded_test)
-
-ytest=loaded_model.predict_classes(padded_test)
-
-
-
 twt = ['I prefer the Anakin and Padme tiger scene in Ep 2']
 #vectorizing the tweet by the pre-fitted tokenizer instance
 #
@@ -63,6 +44,6 @@ twt = ['I prefer the Anakin and Padme tiger scene in Ep 2']
 pred_docs = t.texts_to_sequences(twt)
 
 #####change max length according to input
-twt = pad_sequences(pred_docs, maxlen=49, padding='post')
+twt = pad_sequences(pred_docs, maxlen=112, padding='post')
 
-loaded_model.predict_classes(twt)
+output = loaded_model.predict_classes(twt)
