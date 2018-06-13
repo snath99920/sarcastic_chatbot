@@ -1,39 +1,41 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jun  6 17:38:25 2018
+Created on Wed Jun 13 13:43:52 2018
 
 @author: VISHAL-PC
 """
-
 import numpy as np
 #from keras.models import model_from_json
 from keras.models import Model
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.text import text_to_word_sequence
 from keras.layers import Input, LSTM, Dense, Embedding, Bidirectional, Concatenate
-'''
+
 import pickle
 
-pickleFile = open('pickledData', 'rb')     
-encoded_docs = pickle.load(pickleFile)  
-word_indexes = pickle.load(pickleFile)  
-encoded_docs2 = pickle.load(pickleFile)                
-word_indexes2 = pickle.load(pickleFile)                
-embeddings_index = pickle.load(pickleFile)                
+pickleFile = open('pickledData', 'rb') 
+    
+#encoded_docs = pickle.load(pickleFile)  
+word_indexes = pickle.load(pickleFile) 
+t2 = pickle.load(pickleFile) 
+#encoded_docs2 = pickle.load(pickleFile)                
+#word_indexes2 = pickle.load(pickleFile)                
+#embeddings_index = pickle.load(pickleFile)                
 max_encoder_seq_length = pickle.load(pickleFile)                
 max_decoder_seq_length = pickle.load(pickleFile)                
 num_encoder_tokens = pickle.load(pickleFile)                
 num_decoder_tokens = pickle.load(pickleFile)                
 embedding_matrix = pickle.load(pickleFile)                
-encoder_input_data = pickle.load(pickleFile)                
-decoder_input_data = pickle.load(pickleFile)                
-decoder_target_data = pickle.load(pickleFile)
-ques_input = pickle.load(pickleFile)                
-ans_input = pickle.load(pickleFile)
+#encoder_input_data = pickle.load(pickleFile)                
+#decoder_input_data = pickle.load(pickleFile)                
+#decoder_target_data = pickle.load(pickleFile)
+#ques_input = pickle.load(pickleFile)                
+#ans_input = pickle.load(pickleFile)
 
 pickleFile.close()
-'''
 
+
+'''
 ques_input = []
 ans_input = []
 
@@ -72,7 +74,7 @@ word_indexes = t.word_index
 
 #Decreasing decoder vocabulary
 
-total_vocab = 200
+total_vocab = 20
 
 reverse_word_index = dict(
     (i, word) for word, i in word_indexes.items())
@@ -146,7 +148,7 @@ for i in range(0,len(encoded_docs)):
         for l in range(0,len(encoded_docs2[i])):
             encoder_input_data[i, l] = encoded_docs2[i][l]
 
-
+'''
 latent_dim = 256
 embedding_layer = Embedding(num_encoder_tokens+1,200,weights=[embedding_matrix],
                             input_length=max_encoder_seq_length,
@@ -259,18 +261,4 @@ def predict(str):
     print('Input sentence:', str)
     print('Decoded sentence:', decoded_sentence)
     
-
-
-for seq_index in range(10):
-    # Take one sequence (part of the training set)
-    # for trying out decoding.
-    input_seq = encoder_input_data[seq_index: seq_index + 1]
-    decoded_sentence = decode_sequence(input_seq)
-    print('-')
-    print('Input sentence:', ques_input[seq_index])
-    print('Decoded sentence:', decoded_sentence)
-    predict(ques_input[seq_index])
-    #print('Answer senstence:', ans_input[seq_index])
-
-predict("How do you get your hair to look like that?")
-
+predict("How is our little Find the Wench A Date plan progressing?")

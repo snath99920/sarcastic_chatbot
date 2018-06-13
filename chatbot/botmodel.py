@@ -10,6 +10,8 @@ from keras.models import Model
 from keras.layers import Input, LSTM, Dense, Embedding, Bidirectional, Concatenate
 from keras.preprocessing.text import Tokenizer
 from keras.callbacks import ModelCheckpoint
+import pickle
+import matplotlib.pyplot as plt
 
 '''import pickle
 
@@ -73,7 +75,7 @@ word_indexes = t.word_index
 
 #Decreasing decoder vocabulary
 
-total_vocab = 20
+total_vocab = 200
 
 reverse_word_index = dict(
     (i, word) for word, i in word_indexes.items())
@@ -200,5 +202,37 @@ callbacks_list = [checkpoint]
 history = model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
           batch_size=15,
           validation_split=0.15,
-          epochs=10, 
+          epochs=1, 
           callbacks=callbacks_list)
+
+#Graph
+'''
+plt.plot(history.history['acc'])
+plt.plot(history.history['loss'])
+plt.title('model')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend(['acc','loss'], loc='upper left')
+plt.show()
+'''
+
+pickleFile2 = open('pickledData', 'wb')
+
+#pickle.dump(encoded_docs, pickleFile)  
+pickle.dump(word_indexes,pickleFile2)
+pickle.dump(t2,pickleFile2)  
+#pickle.dump(encoded_docs2,pickleFile)                
+#pickle.dump(word_indexes2,pickleFile)                
+#pickle.dump(embeddings_index,pickleFile)                
+pickle.dump(max_encoder_seq_length,pickleFile2)                
+pickle.dump(max_decoder_seq_length,pickleFile2)                
+pickle.dump(num_encoder_tokens,pickleFile2)                
+pickle.dump(num_decoder_tokens,pickleFile2)                
+pickle.dump(embedding_matrix,pickleFile2)                
+#pickle.dump(encoder_input_data,pickleFile)                
+#pickle.dump(decoder_input_data,pickleFile)                
+#pickle.dump(decoder_target_data,pickleFile) 
+#pickle.dump(ques_input,pickleFile)                
+#pickle.dump(ans_input,pickleFile)               
+
+pickleFile2.close()
