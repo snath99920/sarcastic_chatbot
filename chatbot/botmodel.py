@@ -195,13 +195,12 @@ model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['ac
 
 #filepath="weights-improvement-{epoch:02d}-{val_acc:.2f}.hdf5"
 filepath="weights.best.hdf5"
-checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+checkpoint = ModelCheckpoint(filepath, monitor='acc', verbose=1, save_best_only=True, mode='max')
 callbacks_list = [checkpoint]
 # Run training
 
 history = model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
           batch_size=15,
-          validation_split=0.15,
           epochs=1, 
           callbacks=callbacks_list)
 
