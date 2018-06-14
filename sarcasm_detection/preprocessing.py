@@ -15,10 +15,10 @@ import pandas as pd
 
 
 data = pd.read_csv('cleaned_data.csv', sep='\t',header=None)
-X = data.iloc[:2000,1:2].values
+X = data.iloc[:1000,1:2].values
 Xdata = []
 
-labels = data.iloc[:2000,0:1].values
+labels = data.iloc[:1000,0:1].values
 
 for i in range(len(X)):
     Xdata.append(str(X[i]))
@@ -58,10 +58,10 @@ for word, i in t.word_index.items():
 pickleFile = open('pickleDetect','wb')
 
 pickle.dump(t,pickleFile)
+pickle.dump(max_length,pickleFile)
 pickle.dump(padded_docs,pickleFile)
 pickle.dump(embedding_matrix, pickleFile)
 pickle.dump(labels,pickleFile)
-pickle.dump(max_length,pickleFile)
 pickle.dump(vocab_size,pickleFile)
 
 pickleFile.close()
