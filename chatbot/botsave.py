@@ -1,42 +1,42 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jun  6 16:53:52 2018
+Created on Thu Jun 14 11:02:43 2018
 
 @author: VISHAL-PC
 """
 
-import numpy as np
+#import numpy as np
+#from keras.models import model_from_json
 from keras.models import Model
+#from keras.preprocessing.text import Tokenizer
+#from keras.preprocessing.text import text_to_word_sequence
 from keras.layers import Input, LSTM, Dense, Embedding, Bidirectional, Concatenate
-from keras.preprocessing.text import Tokenizer
-from keras.callbacks import ModelCheckpoint
-import pickle
-#import matplotlib.pyplot as plt
 
-'''import pickle
+import pickle
 
 pickleFile = open('pickledData', 'rb') 
     
-encoded_docs = pickle.load(pickleFile)  
-word_indexes = pickle.load(pickleFile)  
-encoded_docs2 = pickle.load(pickleFile)                
-word_indexes2 = pickle.load(pickleFile)                
-embeddings_index = pickle.load(pickleFile)                
+#encoded_docs = pickle.load(pickleFile)  
+word_indexes = pickle.load(pickleFile) 
+t2 = pickle.load(pickleFile) 
+#encoded_docs2 = pickle.load(pickleFile)                
+#word_indexes2 = pickle.load(pickleFile)                
+#embeddings_index = pickle.load(pickleFile)                
 max_encoder_seq_length = pickle.load(pickleFile)                
 max_decoder_seq_length = pickle.load(pickleFile)                
 num_encoder_tokens = pickle.load(pickleFile)                
 num_decoder_tokens = pickle.load(pickleFile)                
 embedding_matrix = pickle.load(pickleFile)                
-encoder_input_data = pickle.load(pickleFile)                
-decoder_input_data = pickle.load(pickleFile)                
-decoder_target_data = pickle.load(pickleFile)
-ques_input = pickle.load(pickleFile)                
-ans_input = pickle.load(pickleFile)
+#encoder_input_data = pickle.load(pickleFile)                
+#decoder_input_data = pickle.load(pickleFile)                
+#decoder_target_data = pickle.load(pickleFile)
+#ques_input = pickle.load(pickleFile)                
+#ans_input = pickle.load(pickleFile)
 
 pickleFile.close()
 
-'''
 
+'''
 ques_input = []
 ans_input = []
 
@@ -75,7 +75,7 @@ word_indexes = t.word_index
 
 #Decreasing decoder vocabulary
 
-total_vocab = 200
+total_vocab = 20
 
 reverse_word_index = dict(
     (i, word) for word, i in word_indexes.items())
@@ -143,25 +143,15 @@ for word, i in word_indexes2.items():
 encoder_input_data = np.zeros(
     (len(ques_input), max_encoder_seq_length),
     dtype='float32')        
-decoder_input_data = np.zeros(
-    (len(ques_input), max_decoder_seq_length, num_decoder_tokens),
-    dtype='float32')
-decoder_target_data = np.zeros(
-    (len(ques_input), max_decoder_seq_length, num_decoder_tokens),
-    dtype='float32')
 
 
 for i in range(0,len(encoded_docs)):
         for l in range(0,len(encoded_docs2[i])):
             encoder_input_data[i, l] = encoded_docs2[i][l]
-        for l in range(0,len(encoded_docs[i])):
-            decoder_input_data[i,l,encoded_docs[i][l]-1] = 1.
-            if(l > 0):
-                decoder_target_data[i,l-1,encoded_docs[i][l]-1] = 1.
 
+'''
 latent_dim = 256
-
-embedding_layer = Embedding(num_encoder_tokens+1,200 ,weights=[embedding_matrix],
+embedding_layer = Embedding(num_encoder_tokens+1,200,weights=[embedding_matrix],
                             input_length=max_encoder_seq_length,
                             trainable=False)
 
@@ -191,47 +181,25 @@ decoder_outputs = decoder_dense(decoder_outputs)
 # `encoder_input_data` & `decoder_input_data` into `decoder_target_data`
 model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
 
-model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
-
-#filepath="weights-improvement-{epoch:02d}-{val_acc:.2f}.hdf5"
-filepath="weights.best.hdf5"
-checkpoint = ModelCheckpoint(filepath, monitor='acc', verbose=1, save_best_only=True, mode='max')
-callbacks_list = [checkpoint]
+#model.load_weights("weights-improvement-07-0.03.hdf5")
+model.load_weights("weights.best.hdf5")
 # Run training
+model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])    
+    
+encoder_model = Model(encoder_inputs, encoder_states)
 
-history = model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
-          batch_size=15,
-          epochs=1, 
-          callbacks=callbacks_list)
+decoder_state_input_h = Input(shape=(latent_dim*2,))
+decoder_state_input_c = Input(shape=(latent_dim*2,))
+decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
+decoder_outputs, state_h, state_c = decoder_lstm(decoder_inputs, initial_state=decoder_states_inputs)
+decoder_states = [state_h, state_c]
+decoder_outputs = decoder_dense(decoder_outputs)
+decoder_model = Model(
+    [decoder_inputs] + decoder_states_inputs,
+    [decoder_outputs] + decoder_states)
 
-#Graph
-'''
-plt.plot(history.history['acc'])
-plt.plot(history.history['loss'])
-plt.title('model')
-plt.ylabel('loss')
-plt.xlabel('epoch')
-plt.legend(['acc','loss'], loc='upper left')
-plt.show()
-'''
-
-pickleFile2 = open('pickledData', 'wb')
-
-#pickle.dump(encoded_docs, pickleFile)  
-pickle.dump(word_indexes,pickleFile2)
-pickle.dump(t2,pickleFile2)  
-#pickle.dump(encoded_docs2,pickleFile)                
-#pickle.dump(word_indexes2,pickleFile)                
-#pickle.dump(embeddings_index,pickleFile)                
-pickle.dump(max_encoder_seq_length,pickleFile2)                
-pickle.dump(max_decoder_seq_length,pickleFile2)                
-pickle.dump(num_encoder_tokens,pickleFile2)                
-pickle.dump(num_decoder_tokens,pickleFile2)                
-pickle.dump(embedding_matrix,pickleFile2)                
-#pickle.dump(encoder_input_data,pickleFile)                
-#pickle.dump(decoder_input_data,pickleFile)                
-#pickle.dump(decoder_target_data,pickleFile) 
-#pickle.dump(ques_input,pickleFile)                
-#pickle.dump(ans_input,pickleFile)               
-
-pickleFile2.close()
+encoder_model.compile(optimizer='Adam', loss='categorical_crossentropy')
+decoder_model.compile(optimizer='Adam', loss='categorical_crossentropy')
+    
+encoder_model.save('encoder_model.h5')
+decoder_model.save('decoder_model.h5')
