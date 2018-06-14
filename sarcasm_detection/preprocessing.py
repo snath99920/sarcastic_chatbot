@@ -7,26 +7,18 @@ Created on Mon Jun 11 14:26:59 2018
 """
 
 import pickle
-from numpy import array
 from numpy import asarray
 from numpy import zeros
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import Flatten
-from keras.layers import Embedding
 import pandas as pd
-import numpy as np
-from keras.layers import LSTM
-from keras.models import model_from_json
 
 
 data = pd.read_csv('cleaned_data.csv', sep='\t',header=None)
-X = data.iloc[:80000,1:2].values
+X = data.iloc[:2000,1:2].values
 Xdata = []
 
-labels = data.iloc[:80000,0:1].values
+labels = data.iloc[:2000,0:1].values
 
 for i in range(len(X)):
     Xdata.append(str(X[i]))
@@ -41,7 +33,6 @@ encoded_docs = t.texts_to_sequences(Xdata)
 print(encoded_docs)
 max_length = max([len(encoded_docs[i]) for i in range (0,len(encoded_docs))])
 padded_docs = pad_sequences(encoded_docs, maxlen=max_length, padding='post')
-
 
 
 # load the whole embedding into memory
@@ -64,8 +55,9 @@ for word, i in t.word_index.items():
 		embedding_matrix[i] = embedding_vector
         
 
-pickleFile = open('pickleData','wb')
+pickleFile = open('pickleDetect','wb')
 
+pickle.dump(t,pickleFile)
 pickle.dump(padded_docs,pickleFile)
 pickle.dump(embedding_matrix, pickleFile)
 pickle.dump(labels,pickleFile)

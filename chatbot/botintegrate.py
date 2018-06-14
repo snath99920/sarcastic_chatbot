@@ -10,6 +10,8 @@ from keras.models import Model
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.text import text_to_word_sequence
 from keras.layers import Input, LSTM, Dense, Embedding, Bidirectional, Concatenate
+from keras.models import model_from_json
+from keras.preprocessing.sequence import pad_sequences
 
 import pickle
 
@@ -260,5 +262,23 @@ def predict(str):
     print('Predict Functon')
     print('Input sentence:', str)
     print('Decoded sentence:', decoded_sentence)
+
+
+def detect(twt):
+    pickleDet = open('pickleDetect','rb')
+    t = pickle.load(pickleDet)
+    json_file = open('model.json', 'r')
+    loaded_model_json = json_file.read()
+    json_file.close()
+    loaded_model = model_from_json(loaded_model_json)
+    loaded_model.load_weights("model.h5")
+    print("Loaded model from disk")
     
+    twt = ['I prefer the Anakin and Padme tiger scene in Ep 2']
+    pred_docs = t.texts_to_sequences(twt)
+    twt = pad_sequences(pred_docs, maxlen=112, padding='post')
+    output = loaded_model.predict_classes(twt)
+
+
+
 predict("How is our little Find the Wench A Date plan progressing?")
