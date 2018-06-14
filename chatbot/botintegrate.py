@@ -1,42 +1,41 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jun  6 16:53:52 2018
+Created on Wed Jun 13 13:43:52 2018
 
 @author: VISHAL-PC
 """
-
 import numpy as np
+#from keras.models import model_from_json
 from keras.models import Model
-from keras.layers import Input, LSTM, Dense, Embedding, Bidirectional, Concatenate
 from keras.preprocessing.text import Tokenizer
-from keras.callbacks import ModelCheckpoint
-import pickle
-import matplotlib.pyplot as plt
+from keras.preprocessing.text import text_to_word_sequence
+from keras.layers import Input, LSTM, Dense, Embedding, Bidirectional, Concatenate
 
-'''import pickle
+import pickle
 
 pickleFile = open('pickledData', 'rb') 
     
-encoded_docs = pickle.load(pickleFile)  
-word_indexes = pickle.load(pickleFile)  
-encoded_docs2 = pickle.load(pickleFile)                
-word_indexes2 = pickle.load(pickleFile)                
-embeddings_index = pickle.load(pickleFile)                
+#encoded_docs = pickle.load(pickleFile)  
+word_indexes = pickle.load(pickleFile) 
+t2 = pickle.load(pickleFile) 
+#encoded_docs2 = pickle.load(pickleFile)                
+#word_indexes2 = pickle.load(pickleFile)                
+#embeddings_index = pickle.load(pickleFile)                
 max_encoder_seq_length = pickle.load(pickleFile)                
 max_decoder_seq_length = pickle.load(pickleFile)                
 num_encoder_tokens = pickle.load(pickleFile)                
 num_decoder_tokens = pickle.load(pickleFile)                
 embedding_matrix = pickle.load(pickleFile)                
-encoder_input_data = pickle.load(pickleFile)                
-decoder_input_data = pickle.load(pickleFile)                
-decoder_target_data = pickle.load(pickleFile)
-ques_input = pickle.load(pickleFile)                
-ans_input = pickle.load(pickleFile)
+#encoder_input_data = pickle.load(pickleFile)                
+#decoder_input_data = pickle.load(pickleFile)                
+#decoder_target_data = pickle.load(pickleFile)
+#ques_input = pickle.load(pickleFile)                
+#ans_input = pickle.load(pickleFile)
 
 pickleFile.close()
 
-'''
 
+'''
 ques_input = []
 ans_input = []
 
@@ -75,7 +74,7 @@ word_indexes = t.word_index
 
 #Decreasing decoder vocabulary
 
-total_vocab = 200
+total_vocab = 20
 
 reverse_word_index = dict(
     (i, word) for word, i in word_indexes.items())
@@ -143,25 +142,15 @@ for word, i in word_indexes2.items():
 encoder_input_data = np.zeros(
     (len(ques_input), max_encoder_seq_length),
     dtype='float32')        
-decoder_input_data = np.zeros(
-    (len(ques_input), max_decoder_seq_length, num_decoder_tokens),
-    dtype='float32')
-decoder_target_data = np.zeros(
-    (len(ques_input), max_decoder_seq_length, num_decoder_tokens),
-    dtype='float32')
 
 
 for i in range(0,len(encoded_docs)):
         for l in range(0,len(encoded_docs2[i])):
             encoder_input_data[i, l] = encoded_docs2[i][l]
-        for l in range(0,len(encoded_docs[i])):
-            decoder_input_data[i,l,encoded_docs[i][l]-1] = 1.
-            if(l > 0):
-                decoder_target_data[i,l-1,encoded_docs[i][l]-1] = 1.
 
+'''
 latent_dim = 256
-
-embedding_layer = Embedding(num_encoder_tokens+1,200 ,weights=[embedding_matrix],
+embedding_layer = Embedding(num_encoder_tokens+1,200,weights=[embedding_matrix],
                             input_length=max_encoder_seq_length,
                             trainable=False)
 
@@ -191,47 +180,85 @@ decoder_outputs = decoder_dense(decoder_outputs)
 # `encoder_input_data` & `decoder_input_data` into `decoder_target_data`
 model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
 
-model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
-
-#filepath="weights-improvement-{epoch:02d}-{val_acc:.2f}.hdf5"
-filepath="weights.best.hdf5"
-checkpoint = ModelCheckpoint(filepath, monitor='acc', verbose=1, save_best_only=True, mode='max')
-callbacks_list = [checkpoint]
+#model.load_weights("weights-improvement-07-0.03.hdf5")
+model.load_weights("weights.best.hdf5")
 # Run training
+model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])    
+    
+encoder_model = Model(encoder_inputs, encoder_states)
 
-history = model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
-          batch_size=15,
-          epochs=1, 
-          callbacks=callbacks_list)
+decoder_state_input_h = Input(shape=(latent_dim*2,))
+decoder_state_input_c = Input(shape=(latent_dim*2,))
+decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
+decoder_outputs, state_h, state_c = decoder_lstm(decoder_inputs, initial_state=decoder_states_inputs)
+decoder_states = [state_h, state_c]
+decoder_outputs = decoder_dense(decoder_outputs)
+decoder_model = Model(
+    [decoder_inputs] + decoder_states_inputs,
+    [decoder_outputs] + decoder_states)
 
-#Graph
-'''
-plt.plot(history.history['acc'])
-plt.plot(history.history['loss'])
-plt.title('model')
-plt.ylabel('loss')
-plt.xlabel('epoch')
-plt.legend(['acc','loss'], loc='upper left')
-plt.show()
-'''
+encoder_model.compile(optimizer='Adam', loss='categorical_crossentropy')
+decoder_model.compile(optimizer='Adam', loss='categorical_crossentropy')
+    
+reverse_word_index = dict(
+    (i, word) for word, i in word_indexes.items())
 
-pickleFile2 = open('pickledData', 'wb')
+def decode_sequence(input_seq):
+    # Encode the input as state vectors.
+    states_value = encoder_model.predict(input_seq)
 
-#pickle.dump(encoded_docs, pickleFile)  
-pickle.dump(word_indexes,pickleFile2)
-pickle.dump(t2,pickleFile2)  
-#pickle.dump(encoded_docs2,pickleFile)                
-#pickle.dump(word_indexes2,pickleFile)                
-#pickle.dump(embeddings_index,pickleFile)                
-pickle.dump(max_encoder_seq_length,pickleFile2)                
-pickle.dump(max_decoder_seq_length,pickleFile2)                
-pickle.dump(num_encoder_tokens,pickleFile2)                
-pickle.dump(num_decoder_tokens,pickleFile2)                
-pickle.dump(embedding_matrix,pickleFile2)                
-#pickle.dump(encoder_input_data,pickleFile)                
-#pickle.dump(decoder_input_data,pickleFile)                
-#pickle.dump(decoder_target_data,pickleFile) 
-#pickle.dump(ques_input,pickleFile)                
-#pickle.dump(ans_input,pickleFile)               
+    # Generate empty target sequence of length 1.
+    target_seq = np.zeros((1, 1, num_decoder_tokens))
+    # Populate the first character of target sequence with the start character.
+    target_seq[0, 0, word_indexes['<sos>']] = 1.
 
-pickleFile2.close()
+    # Sampling loop for a batch of sequences
+    # (to simplify, here we assume a batch of size 1).
+    stop_condition = False
+    decoded_sentence = ''
+    decoded_answer = ''
+    while not stop_condition:
+        output_tokens, h, c = decoder_model.predict(
+            [target_seq] + states_value)
+
+        # Sample a token
+        #print(output_tokens[0, -1, :])
+        sampled_token_index = np.argmax(output_tokens[0, -1, :])
+        #print(sampled_token_index)
+        sampled_word = reverse_word_index[sampled_token_index]
+        sampled_word = sampled_word + " "
+        decoded_sentence += sampled_word
+        if(sampled_word == '<sos> '):
+            decoded_answer = decoded_answer
+        else:
+            decoded_answer += sampled_word
+
+        # Exit condition: either hit max length
+        # or find stop character.
+        if (sampled_word == '<eos> ' or
+           len(text_to_word_sequence(decoded_sentence)) > max_decoder_seq_length):
+            stop_condition = True
+
+        # Update the target sequence (of length 1).
+        target_seq = np.zeros((1, 1, num_decoder_tokens))
+        target_seq[0, 0, sampled_token_index] = 1.
+
+        # Update states
+        states_value = [h, c]
+
+    return decoded_answer
+
+
+def predict(str):
+    list = []
+    list.append(str)
+    str_docs=t2.texts_to_sequences(list)
+    encoder_str_data = np.zeros((1,max_encoder_seq_length),dtype='float32')
+    for l in range(0,len(str_docs[0])):
+            encoder_str_data[0][l] = str_docs[0][l]
+    decoded_sentence = decode_sequence(encoder_str_data)
+    print('Predict Functon')
+    print('Input sentence:', str)
+    print('Decoded sentence:', decoded_sentence)
+    
+predict("How is our little Find the Wench A Date plan progressing?")

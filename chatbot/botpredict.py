@@ -72,7 +72,7 @@ word_indexes = t.word_index
 
 #Decreasing decoder vocabulary
 
-total_vocab = 20
+total_vocab = 200
 
 reverse_word_index = dict(
     (i, word) for word, i in word_indexes.items())
@@ -246,6 +246,21 @@ def decode_sequence(input_seq):
 
     return decoded_answer
 
+
+def predict(str):
+    list = []
+    list.append(str)
+    str_docs=t2.texts_to_sequences(list)
+    encoder_str_data = np.zeros((1,max_encoder_seq_length),dtype='float32')
+    for l in range(0,len(str_docs[0])):
+            encoder_str_data[0][l] = str_docs[0][l]
+    decoded_sentence = decode_sequence(encoder_str_data)
+    print('Predict Functon')
+    print('Input sentence:', str)
+    print('Decoded sentence:', decoded_sentence)
+    
+
+
 for seq_index in range(10):
     # Take one sequence (part of the training set)
     # for trying out decoding.
@@ -254,4 +269,8 @@ for seq_index in range(10):
     print('-')
     print('Input sentence:', ques_input[seq_index])
     print('Decoded sentence:', decoded_sentence)
-    print('Answer senstence:', ans_input[seq_index])
+    predict(ques_input[seq_index])
+    #print('Answer senstence:', ans_input[seq_index])
+
+predict("How do you get your hair to look like that?")
+
