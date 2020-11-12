@@ -1,29 +1,18 @@
-
-# coding: utf-8
-
-# In[1]:
-
-
 import nltk
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.decomposition import TruncatedSVD
 from nltk.stem import WordNetLemmatizer
+
+
 wordnet_lemmatizer = WordNetLemmatizer()
 lines = [line.rstrip() for line in open(r'C:/Users/Aravind/Downloads/summary.txt')]
 
 titles = [line.rstrip() for line in open(r'C:\Users\Aravind\Downloads\Udemy,NLP\machine_learning_examples-master\machine_learning_examples-master\nlp_class\all_book_titles.txt')]
 lines
 
-
-# In[2]:
-
-
 stopwords = set(w.rstrip() for w in open(r'C:\Users\Aravind\Downloads\Udemy,NLP\machine_learning_examples-master\machine_learning_examples-master\nlp_class\stopwords.txt'))
-
-
-# In[3]:
 
 
 def my_tokenizer(s):
@@ -33,10 +22,6 @@ def my_tokenizer(s):
     tokens = [wordnet_lemmatizer.lemmatize(t) for t in tokens] # put words into base form
     tokens = [t for t in tokens if t not in stopwords] # remove stopwords
     return tokens
-
-
-# In[9]:
-
 
 word_index_map = {}   #tokenizes data
 currentindex = 0
@@ -55,26 +40,10 @@ for line in lines:
             word_index_map[token] = currentindex
             currentindex = currentindex+1
             index_word_map.append(token)
+
 nltk.download('averaged_perceptron_tagger')  
-
-
-   
-
-
-# In[28]:
-
-
 nltk.download('maxent_ne_chunker')
-
-
-# In[30]:
-
-
 nltk.download('words')
-
-
-# In[50]:
-
 
 postags = [[]]
 singularnouns = [[]]
@@ -91,21 +60,12 @@ for tokenss in all_tokens:
      singularnouns[i] = [word for word,pos in postags[i] if pos == 'NN']
      i = i+1
         
-        
-
 words.most_common()
-
-
-# In[51]:
-
 
 print(netemp)            # weird results,need to clarify.Not getting proper NE tags
 for chunkk in netemp:
     if hasattr (chunkk,'label'):
         print (chunkk.label(), " ".join(c[0] for c in chunkk.leaves()))
-
-
-# In[52]:
 
 
 def tokens_to_vector(tokens):
@@ -117,16 +77,10 @@ def tokens_to_vector(tokens):
     return x
 
 
-# In[53]:
-
-
 N = len(all_tokens)
 D = len(word_index_map)
 X = np.zeros((D,N))
 X.shape
-
-
-# In[106]:
 
 
 i = 0            #code for LSA .Again,a minor error possibly with data shape.Need to clarify
@@ -141,16 +95,3 @@ plt.scatter(Z[:,0], Z[:,1])           #Plots everything
 for i in range(D):
     plt.annotate(s=index_word_map[i], xy=(Z[i,0], Z[i,1]))
 plt.show()   
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
